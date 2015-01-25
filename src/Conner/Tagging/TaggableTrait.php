@@ -21,12 +21,14 @@ trait TaggableTrait {
 	 * Perform the action of tagging the model with the given string
 	 *
 	 * @param $tagName string or array
+	 * @param $user_id int
+	 * @param $scope int
 	 */
-	public function tag($tagNames) {
+	public function tag($tagNames, $user_id = null, $scope = null) {
 		$tagNames = TaggingUtil::makeTagArray($tagNames);
 		
 		foreach($tagNames as $tagName) {
-			$this->addTag($tagName);
+			$this->addTag($tagName, $user_id, $scope);
 		}
 	}
 	
@@ -144,8 +146,10 @@ trait TaggableTrait {
 	 * Adds a single tag
 	 *
 	 * @param $tagName string
+	 * @param $user_id int
+	 * @param $scope int
 	 */
-	private function addTag($tagName) {
+	private function addTag($tagName, $user_id = null, $scope = null) {
 		$tagName = trim($tagName);
 		$tagSlug = TaggingUtil::slug($tagName);
 		
@@ -159,6 +163,12 @@ trait TaggableTrait {
 			'tag_name'=>call_user_func($displayer, $tagName),
 			'tag_slug'=>$tagSlug,
 		));
+
+		if($user_id && !empty($scope))
+		{
+			$tagged->user_id = $user_id;
+			$tagged->user_scope = $scope;
+		}
 		
 		$this->tagged()->save($tagged);
 
