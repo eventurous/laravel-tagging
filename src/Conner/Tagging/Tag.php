@@ -1,6 +1,7 @@
 <?php namespace Conner\Tagging;
 
 use Conner\Tagging\TaggingUtil;
+use Illuminate\Support\Str;
 
 /**
  * Copyright (C) 2014 Robert Conner
@@ -42,6 +43,23 @@ class Tag extends \Eloquent {
 	 */
 	public function scopeSuggested($query) {
 		return $query->where('suggest', true);
+	}
+
+	/**
+	 * Filter model to subset with the given tags
+	 *
+	 * @param $tagNames array|string
+	 */
+	public function scopeWithAllTags($query, $tagNames) {
+		$tagNames = TaggingUtil::makeTagArray($tagNames);
+		
+		$tagNames = array_map('\Conner\Tagging\TaggingUtil::slug', $tagNames);
+
+		foreach($tagNames as $tagSlug) {
+			$query->where('tag_slug', '=', $tagSlug);
+		}
+		
+		return $query;
 	}
 	
 	/**
