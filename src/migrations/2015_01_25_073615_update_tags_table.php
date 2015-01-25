@@ -7,8 +7,9 @@ class UpdateTagsTable extends Migration {
 
   public function up()
   {
-    Schema::create('tagging_tagged', function(Blueprint $table) {
-      
+    Schema::table('tagging_tagged', function($table)
+    {
+
       if (!Schema::hasColumn('tagging_tagged', 'user_id'))
       {
           $table->integer('user_id')->unsigned()->index();
