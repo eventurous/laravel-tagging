@@ -56,7 +56,7 @@ class Tag extends \Eloquent {
 		$tagNames = array_map('\Conner\Tagging\TaggingUtil::slug', $tagNames);
 
 		foreach($tagNames as $tagSlug) {
-			$query->where('tag_slug', '=', $tagSlug);
+			$query->where('slug', 'like', "%?%", [$tagSlug]);
 		}
 		
 		return $query;
