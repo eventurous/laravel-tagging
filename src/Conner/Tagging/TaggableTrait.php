@@ -31,7 +31,7 @@ trait TaggableTrait {
 			$this->addTag($tagName, $user_id, $scope);
 		}
 	}
-	
+
 	/**
 	 * Return array of the tag names related to the current model
 	 *
@@ -69,11 +69,11 @@ trait TaggableTrait {
 	 *
 	 * @param $tagName string or array (or null to remove all tags)
 	 */
-	public function untag($tagNames=null) {
+	public function untag($tagNames=null, $user_id = null, $scope = null) {
 		if(is_null($tagNames)) {
 			$currentTagNames = $this->tagNames();
 			foreach($currentTagNames as $tagName) {
-				$this->removeTag($tagName);
+				$this->removeTag($tagName, $user_id, $scope);
 			}
 			return;
 		}
@@ -89,8 +89,10 @@ trait TaggableTrait {
 	 * Replace the tags from this model
 	 *
 	 * @param $tagName string or array
+	 * @param $user_id int
+	 * @param $scope int
 	 */
-	public function retag($tagNames) {
+	public function retag($tagNames, $user_id = null, $scope = null) {
 		$tagNames = TaggingUtil::makeTagArray($tagNames);
 		$currentTagNames = $this->tagNames();
 		
@@ -98,10 +100,10 @@ trait TaggableTrait {
 		$additions = array_diff($tagNames, $currentTagNames);
 		
 		foreach($deletions as $tagName) {
-			$this->removeTag($tagName);
+			$this->removeTag($tagName, $user_id, $scope );
 		}
 		foreach($additions as $tagName) {
-			$this->addTag($tagName);
+			$this->addTag($tagName, $user_id, $scope);
 		}
 	}
 	
@@ -179,16 +181,24 @@ trait TaggableTrait {
 	 * Removes a single tag
 	 *
 	 * @param $tagName string
+	 * @param $user_id int
+	 * @param $scope int
 	 */
-	private function removeTag($tagName) {
+	private function removeTag($tagName, $user_id = null, $scope = null) {
 		$tagName = trim($tagName);
 		
 		$normalizer = \Config::get('tagging::normalizer');
 		$normalizer = empty($normalizer) ? '\Conner\Tagging\TaggingUtil::slug' : $normalizer;
 		
 		$tagSlug = call_user_func($normalizer, $tagName);
+		$query = $this->tagged()->where('tag_slug', '=', $tagSlug);
+
+		# scope of 0 can only delete their own tags
+		if($scope === 0){
+			$query->where('user_id', '=', $user_id);
+		}
 		
-		if($count = $this->tagged()->where('tag_slug', '=', $tagSlug)->delete()) {
+		if($count = $query->delete()) {
 			TaggingUtil::decrementCount($tagName, $tagSlug, $count);
 		}
 	}
